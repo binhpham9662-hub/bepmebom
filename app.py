@@ -159,10 +159,22 @@ for idx, (cat_name, items) in enumerate(MENU.items()):
             
     st.divider() # Vạch ngăn cách giữa các danh mục
 
-# --- CỘT TRÁI (SIDEBAR): Giỏ hàng và Form Checkout ---
-with st.sidebar:
-    st.header("🛒 Giỏ Hàng Của Bạn")
-    
+# --- PHẦN GIỎ HÀNG VÀ THANH TOÁN (Dời khỏi sidebar để dễ dùng trên điện thoại) ---
+st.markdown("<div id='gio-hang' style='position: relative; top: -60px;'></div>", unsafe_allow_html=True)
+st.divider()
+st.header("🛒 Giỏ Hàng Của Bạn")
+
+# Tính tổng số lượng món để hiển thị nút nổi (Floating Button)
+total_items = sum(item['quantity'] for item in st.session_state.cart.values()) if 'cart' in st.session_state else 0
+if total_items > 0:
+    total_amount_floating = sum(item['price'] * item['quantity'] for item in st.session_state.cart.values())
+    st.markdown(f"""
+    <a href="#gio-hang" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: #d84315; color: white; padding: 14px 28px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(216, 67, 21, 0.4); z-index: 99999; white-space: nowrap; transition: 0.2s;">
+        🛒 Giỏ Hàng ({total_items}) • {total_amount_floating:,}đ
+    </a>
+    """, unsafe_allow_html=True)
+
+with st.container():
     if not st.session_state.cart:
         st.info("Giỏ hàng đang trống. Hãy thêm món ăn vào giỏ nhé!")
     else:
@@ -191,7 +203,7 @@ with st.sidebar:
         st.markdown(f"### Tổng cộng: <span style='color:#d84315'>{total_amount:,}đ</span>", unsafe_allow_html=True)
         
         st.subheader("Thông tin nhận hàng")
-        st.markdown("**📍 Tự động lấy vị trí (Khuyên dùng)**", help="Bấm vào đây để cấp quyền lấy vị trí chính xác của bạn giúp Shipper giao hàng dễ hơn.")
+        st.markdown("**📍 Tự động lấy vị trí:** *(Chỉ cần bấm nút **'Get Location'** 1 lần ở dưới)*")
         loc = streamlit_geolocation()
         google_maps_link = ""
         if loc and loc.get('latitude') and loc.get('longitude'):

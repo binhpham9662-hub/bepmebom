@@ -109,8 +109,25 @@ st.markdown("### BẾP MẸ BOM")
 st.markdown("Khám phá hương vị cơm nhà ấm cúng, chuẩn vị gia đình Việt.")
 st.divider()
 
-# Hiển thị các block tags (như anchor links) ở trên cùng để khách bấm vào (Làm Sticky)
-tags_html = "<div style='position: sticky; top: 46px; background-color: white; z-index: 999; padding: 10px 0; border-bottom: 1px solid #f0f2f6; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px -6px #222;'>"
+# Cấu hình CSS để ép Streamlit Container bao ngoài trở thành Sticky
+st.markdown("""
+<style>
+    /* Tìm thẻ cha chứa class 'bepmebom-sticky' và làm nó sticky */
+    div[data-testid="stVerticalBlock"] > div:has(.bepmebom-sticky) {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 2.875rem;
+        z-index: 999;
+        background-color: white;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Hiển thị các block tags
+tags_html = "<div class='bepmebom-sticky' style='display: flex; flex-wrap: wrap; gap: 8px;'>"
 for idx, cat in enumerate(MENU.keys()):
     tags_html += f"<a href='#menu-section-{idx}' target='_self' style='text-decoration: none;'><span style='background-color: #e8f5e9; color: #2e7d32; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #c8e6c9; display: inline-block; transition: all 0.2s;'>{cat}</span></a>"
 tags_html += "</div>"

@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from streamlit_geolocation import streamlit_geolocation
 
 # 1. Cấu hình trang
 st.set_page_config(page_title="Bếp Mẹ Bom", page_icon="🍱", layout="wide")
@@ -102,54 +103,61 @@ st.markdown("### BẾP MẸ BOM")
 st.markdown("Khám phá hương vị cơm nhà ấm cúng, chuẩn vị gia đình Việt.")
 st.divider()
 
-# Sử dụng Tabs cho các danh mục món ăn (Thay cho nút Pill để giao diện gọn gàng)
-tabs = st.tabs(list(MENU.keys()))
+# Hiển thị các block tags (như anchor links) ở trên cùng để khách bấm vào
+tags_html = "<div style='display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;'>"
+for idx, cat in enumerate(MENU.keys()):
+    tags_html += f"<a href='#menu-section-{idx}' target='_self' style='text-decoration: none;'><span style='background-color: #e8f5e9; color: #2e7d32; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #c8e6c9; display: inline-block; transition: all 0.2s;'>{cat}</span></a>"
+tags_html += "</div>"
+st.markdown(tags_html, unsafe_allow_html=True)
 
-for idx, cat_name in enumerate(MENU.keys()):
-    with tabs[idx]:
-        st.markdown(f"#### 🍲 {cat_name}")
-        items = MENU[cat_name]
+# Hiển thị Menu theo chiều dọc toàn bộ
+for idx, (cat_name, items) in enumerate(MENU.items()):
+    # Đặt thẻ div ẩn làm điểm neo (anchor). top: -60px giúp khi nhảy không bị che khuất bởi header
+    st.markdown(f"<div id='menu-section-{idx}' style='position: relative; top: -60px;'></div>", unsafe_allow_html=True)
+    st.markdown(f"#### 🍲 {cat_name}")
+    
+    # Tạo lưới 2 cột
+    for i in range(0, len(items), 2):
+        cols = st.columns(2)
         
-        # Tạo lưới 2 cột
-        for i in range(0, len(items), 2):
-            cols = st.columns(2)
-            
-            # Hàm render từng món
-            def render_item(item, col):
-                with col:
-                    # Container đóng khung món ăn (giống Card)
-                    with st.container(border=True):
-                        c_img, c_info = st.columns([1.5, 3])
+        # Hàm render từng món
+        def render_item(item, col):
+            with col:
+                # Container đóng khung món ăn (giống Card)
+                with st.container(border=True):
+                    c_img, c_info = st.columns([1.5, 3])
+                    
+                    with c_img:
+                        st.image(item['img'], use_container_width=True)
                         
-                        with c_img:
-                            st.image(item['img'], use_container_width=True)
-                            
-                        with c_info:
-                            st.markdown(f"**{item['name']}**")
-                            st.markdown(f"<span style='color:#757575; font-size:13px;'>{item['desc']}</span>", unsafe_allow_html=True)
-                            
-                            # Cột cho Giá và Nút để xếp thẳng hàng ngang
-                            cp1, cp2 = st.columns([1.2, 1])
-                            with cp1:
-                                st.markdown(f"<div style='margin-top:12px;'><strong><span style='color:#d84315; font-size: 16px;'>{item['price']:,}đ</span></strong> <span style='font-size:12px'>/ {item['unit']}</span></div>", unsafe_allow_html=True)
-                            
-                            with cp2:
-                                # Xử lý nút bấm theo Category (Riêng bánh bao có tùy chọn)
-                                if cat_name == "Bánh bao Handmade":
-                                    opt = st.radio("Loại", ["Theo hộp", "Theo cái"], key=f"rad_{item['name']}", horizontal=True, label_visibility="collapsed")
-                                    price = item['price'] if opt == "Theo hộp" else int(item['price'] / item['items_per_pack'])
-                                    if st.button("🛒 Đặt", key=f"btn_{item['name']}_{opt}", type="primary", use_container_width=True):
-                                        add_to_cart(item['name'], opt, price)
-                                else:
-                                    if st.button("🛒 Đặt", key=f"btn_{item['name']}", type="primary", use_container_width=True):
-                                        add_to_cart(item['name'], "Mặc định", item['price'])
+                    with c_info:
+                        st.markdown(f"**{item['name']}**")
+                        st.markdown(f"<span style='color:#757575; font-size:13px;'>{item['desc']}</span>", unsafe_allow_html=True)
+                        
+                        # Cột cho Giá và Nút để xếp thẳng hàng ngang
+                        cp1, cp2 = st.columns([1.2, 1])
+                        with cp1:
+                            st.markdown(f"<div style='margin-top:12px;'><strong><span style='color:#d84315; font-size: 16px;'>{item['price']:,}đ</span></strong> <span style='font-size:12px'>/ {item['unit']}</span></div>", unsafe_allow_html=True)
+                        
+                        with cp2:
+                            # Xử lý nút bấm theo Category (Riêng bánh bao có tùy chọn)
+                            if cat_name == "Bánh bao Handmade":
+                                opt = st.radio("Loại", ["Theo hộp", "Theo cái"], key=f"rad_{item['name']}", horizontal=True, label_visibility="collapsed")
+                                price = item['price'] if opt == "Theo hộp" else int(item['price'] / item['items_per_pack'])
+                                if st.button("🛒 Đặt", key=f"btn_{item['name']}_{opt}", type="primary", use_container_width=True):
+                                    add_to_cart(item['name'], opt, price)
+                            else:
+                                if st.button("🛒 Đặt", key=f"btn_{item['name']}", type="primary", use_container_width=True):
+                                    add_to_cart(item['name'], "Mặc định", item['price'])
+        
+        # Render cột 1
+        if i < len(items):
+            render_item(items[i], cols[0])
+        # Render cột 2
+        if i + 1 < len(items):
+            render_item(items[i+1], cols[1])
             
-            # Render cột 1
-            if i < len(items):
-                render_item(items[i], cols[0])
-            # Render cột 2
-            if i + 1 < len(items):
-                render_item(items[i+1], cols[1])
+    st.divider() # Vạch ngăn cách giữa các danh mục
 
 # --- CỘT TRÁI (SIDEBAR): Giỏ hàng và Form Checkout ---
 with st.sidebar:
@@ -183,16 +191,23 @@ with st.sidebar:
         st.markdown(f"### Tổng cộng: <span style='color:#d84315'>{total_amount:,}đ</span>", unsafe_allow_html=True)
         
         st.subheader("Thông tin nhận hàng")
+        st.markdown("**📍 Tự động lấy vị trí (Khuyên dùng)**", help="Bấm vào đây để cấp quyền lấy vị trí chính xác của bạn giúp Shipper giao hàng dễ hơn.")
+        loc = streamlit_geolocation()
+        google_maps_link = ""
+        if loc and loc.get('latitude') and loc.get('longitude'):
+            google_maps_link = f"https://www.google.com/maps?q={loc['latitude']},{loc['longitude']}"
+            st.success("Đã nhận được tọa độ vị trí của bạn!")
+            
         with st.form("checkout_form"):
             name = st.text_input("Tên người đặt (*)", placeholder="Nhập họ tên")
             phone = st.text_input("Số điện thoại (*)", placeholder="Nhập SĐT")
-            address = st.text_area("Địa chỉ giao hàng (*)", placeholder="Nhập địa chỉ")
+            address = text_area_val = st.text_area("Địa chỉ giao hàng (*)", placeholder="Nếu đã chia sẻ vị trí ở trên, chỉ cần nhập thêm Số nhà/ngõ")
             
             submitted = st.form_submit_button("🚀 Gửi Đơn Hàng", type="primary", use_container_width=True)
             
             if submitted:
                 if not name.strip() or not phone.strip() or not address.strip():
-                    st.error("⚠️ Vui lòng nhập đầy đủ thông tin.")
+                    st.error("⚠️ Vui lòng nhập đầy đủ Tên, SĐT và Địa chỉ.")
                 else:
                     order_lines = []
                     for k, v in st.session_state.cart.items():
@@ -203,8 +218,14 @@ with st.sidebar:
                         f"🔔 **ĐƠN HÀNG MỚI - BẾP MẸ BOM** 🔔\n\n"
                         f"👤 Khách hàng: {name}\n"
                         f"📞 SĐT: {phone}\n"
-                        f"🏠 Địa chỉ: {address}\n\n"
-                        f"📦 **Chi tiết món:**\n"
+                        f"🏠 Địa chỉ: {address}\n"
+                    )
+                    
+                    if google_maps_link:
+                        order_text += f"📍 **Tọa độ Map:** {google_maps_link}\n"
+                        
+                    order_text += (
+                        f"\n📦 **Chi tiết món:**\n"
                         + "\n".join(order_lines) +
                         f"\n\n💰 **TỔNG CỘNG: {total_amount:,}đ**"
                     )

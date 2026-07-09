@@ -52,6 +52,12 @@ def add_to_cart(name, option, price):
             "price": price,
             "quantity": 1
         }
+    
+    # Đồng bộ Session State với Widget để sửa lỗi Streamlit không nhận click thứ 2
+    qty_widget_key = f"qty_{item_key}"
+    if qty_widget_key in st.session_state:
+        st.session_state[qty_widget_key] = st.session_state.cart[item_key]['quantity']
+        
     st.toast(f"Đã thêm {name} vào giỏ hàng! 🛒", icon="✅")
 
 # 4. Data Menu (Đã thêm img và desc)
@@ -103,8 +109,8 @@ st.markdown("### BẾP MẸ BOM")
 st.markdown("Khám phá hương vị cơm nhà ấm cúng, chuẩn vị gia đình Việt.")
 st.divider()
 
-# Hiển thị các block tags (như anchor links) ở trên cùng để khách bấm vào
-tags_html = "<div style='display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;'>"
+# Hiển thị các block tags (như anchor links) ở trên cùng để khách bấm vào (Làm Sticky)
+tags_html = "<div style='position: sticky; top: 46px; background-color: white; z-index: 999; padding: 10px 0; border-bottom: 1px solid #f0f2f6; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px -6px #222;'>"
 for idx, cat in enumerate(MENU.keys()):
     tags_html += f"<a href='#menu-section-{idx}' target='_self' style='text-decoration: none;'><span style='background-color: #e8f5e9; color: #2e7d32; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #c8e6c9; display: inline-block; transition: all 0.2s;'>{cat}</span></a>"
 tags_html += "</div>"
@@ -112,8 +118,8 @@ st.markdown(tags_html, unsafe_allow_html=True)
 
 # Hiển thị Menu theo chiều dọc toàn bộ
 for idx, (cat_name, items) in enumerate(MENU.items()):
-    # Đặt thẻ div ẩn làm điểm neo (anchor). top: -60px giúp khi nhảy không bị che khuất bởi header
-    st.markdown(f"<div id='menu-section-{idx}' style='position: relative; top: -60px;'></div>", unsafe_allow_html=True)
+    # Đặt thẻ div ẩn làm điểm neo (anchor). top: -130px giúp nhảy tới không bị che khuất bởi khối sticky
+    st.markdown(f"<div id='menu-section-{idx}' style='position: relative; top: -130px;'></div>", unsafe_allow_html=True)
     st.markdown(f"#### 🍲 {cat_name}")
     
     # Tạo lưới 2 cột
